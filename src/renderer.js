@@ -15,13 +15,9 @@ module.exports = function(context) {
 
 	const getIP = (machineName = 'local-by-flywheel') => {
 	    return new Promise(function(resolve, reject) {
-	        let cmd = 'docker-machine ip';
+	        let cmd = `docker-machine ip ${machineName}`;
 
-	        if (process.env.DOCKER_MACHINE_DNS_RESOLVER) {
-	            cmd = process.env.DOCKER_MACHINE_DNS_RESOLVER;
-	        }
-
-	        exec(cmd + ' ' + machineName, (err, stdout) => {
+	        exec(cmd, (err, stdout) => {
 	            if (err && cache[machineName]) {
 	                resolve(cache[machineName]);
 	            } else if (err) {
@@ -46,9 +42,10 @@ module.exports = function(context) {
 
 
 		console.log( 'ip: %O', IP );
-		console.log('ip??: %O', getIP( 'default' ) );
 		console.log( exec('docker-machine ip local-by-flywheel' ) );
-		console.log( exec('dockerp-machine ip'));
+
+		console.log('ip??: %O', getIP( 'default' ) );
+		console.log( exec('docker-machine ip'));
 
 		let wpcliPHP = `<?php
 define('DB_HOST', '${IP}:${site.ports.MYSQL}');
