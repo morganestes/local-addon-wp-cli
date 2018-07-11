@@ -1,6 +1,9 @@
 'use strict';
 
 const path = require('path');
+const exec = require('child_process').exec;
+
+let cache = {};
 
 module.exports = function(context) {
 
@@ -10,13 +13,42 @@ module.exports = function(context) {
 	const notifier = context.notifier;
 	const React = context.React;
 
+	const getIP = (machineName = 'local-by-flywheel') => {
+	    return new Promise(function(resolve, reject) {
+	        let cmd = 'docker-machine ip';
+
+	        if (process.env.DOCKER_MACHINE_DNS_RESOLVER) {
+	            cmd = process.env.DOCKER_MACHINE_DNS_RESOLVER;
+	        }
+
+	        exec(cmd + ' ' + machineName, (err, stdout) => {
+	            if (err && cache[machineName]) {
+	                resolve(cache[machineName]);
+	            } else if (err) {
+	                console.error(err.message);
+	                reject(err);
+	                return;
+	            }
+
+	            cache[machineName] = stdout.trim();
+	            resolve(cache[machineName]);
+	        });
+	    });
+	};
+
 	const configureWPCLI = (event, site) => {
 
 		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
 		let publicCWD = fs.cwd(path.join(sitePath, './'));
 
 		// @todo get IP from Docker.
-		let IP = '';
+		let IP = getIP();
+
+
+		console.log( 'ip: %O', IP );
+		console.log('ip??: %O', getIP( 'default' ) );
+		console.log( exec('docker-machine ip local-by-flywheel' ) );
+		console.log( exec('dockerp-machine ip'));
 
 		let wpcliPHP = `<?php
 define('DB_HOST', '${IP}:${site.ports.MYSQL}');
