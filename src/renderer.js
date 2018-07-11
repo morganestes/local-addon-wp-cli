@@ -1,0 +1,75 @@
+'use strict';
+
+const path = require('path');
+
+module.exports = function(context) {
+
+	const hooks = context.hooks;
+	const userHome = context.environment.userHome;
+	const fs = context.fileSystemJetpack;
+	const notifier = context.notifier;
+	const React = context.React;
+
+	const configureWPCLI = (event, site) => {
+
+		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
+		let publicCWD = fs.cwd(path.join(sitePath, './'));
+
+		// @todo get IP from Docker.
+		let IP = '';
+
+		let wpcliPHP = `<?php
+define('DB_HOST', '${IP}:${site.ports.MYSQL}');
+define('DB_USER', '${site.mysql.user}');
+define('DB_PASSWORD', '${site.mysql.password}');
+
+error_reporting(0);
+@ini_set('display_errors', 0);
+define( 'WP_DEBUG', false );`;
+
+		let wpcliYML = `
+path: app/public
+url: http://${site.domain}
+require:
+  - wp-cli.local.php
+`;
+
+		// Debugging.
+		console.log('site: %O', site);
+		publicCWD.file( 'site.json', {content: site} );
+
+		publicCWD.file('wp-cli.local.php', {content: wpcliPHP});
+
+		publicCWD.write('wp-cli.local.yml', wpcliYML);
+
+		if('apache' === site.webServer) {
+			let apache = `apache_modules:
+  - mod_rewrite`;
+			publicCWD.append( 'wp-cli.local.yml', apache );
+		}
+
+		event.target.setAttribute('disabled', 'true');
+
+		notifier.notify({
+			title: 'WP-CLI',
+			message: 'WP-CLI has been configured for this site.'
+		});
+
+	};
+
+	// Add button to the Utilities section in the site management UI.
+	hooks.addContent('siteInfoUtilities', (site) => {
+
+		return (
+			<li key="wp-cli-local-integration"><strong>WP-CLI</strong>
+				<p>
+					<button className="--GrayOutline --Inline" onClick={(event) => {configureWPCLI(event, site)}} ref="configure-wp-cli">
+						Configure WP-CLI
+					</button>
+				</p>
+			</li>
+		);
+
+	});
+
+};
