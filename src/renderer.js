@@ -46,17 +46,11 @@ module.exports = function(context) {
 		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
 		let publicCWD = fs.cwd(path.join(sitePath, './'));
 
-		// @todo get IP from Docker.
-		let IP = getIP();
+		getIP().then(
+			(data) => {
+				IP = data.toString();
 
-
-		console.log( 'ip: %O', IP );
-		console.log( exec('docker-machine ip local-by-flywheel' ) );
-
-		console.log('ip??: %O', getIP( 'default' ) );
-		console.log( exec('docker-machine ip'));
-
-		let wpcliPHP = `<?php
+				let wpcliPHP = `<?php
 define('DB_HOST', '${IP}:${site.ports.MYSQL}');
 define('DB_USER', '${site.mysql.user}');
 define('DB_PASSWORD', '${site.mysql.password}');
@@ -65,18 +59,15 @@ error_reporting(0);
 @ini_set('display_errors', 0);
 define( 'WP_DEBUG', false );`;
 
-		let wpcliYML = `
-path: app/public
-url: http://${site.domain}
-require:
-  - wp-cli.local.php
-`;
+		publicCWD.file('wp-cli.local.php', {content: wpcliPHP});
+			},
+			(err) => {
+				console.error(err);
+			});
 
 		// Debugging.
 		console.log('site: %O', site);
 		publicCWD.file( 'site.json', {content: site} );
-
-		publicCWD.file('wp-cli.local.php', {content: wpcliPHP});
 
 		publicCWD.write('wp-cli.local.yml', wpcliYML);
 
