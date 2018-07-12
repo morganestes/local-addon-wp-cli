@@ -6,7 +6,11 @@ const exec = require('child_process').exec;
 
 module.exports = function(context) {
 
-	const { hooks, notifier, React, environment: {userHome, dockerMachinePath, dockerEnv}, fileSystemJetpack:fs } = context;
+	const { hooks, notifier, React,
+		docker: { docker },
+		environment: {userHome, dockerMachinePath, dockerEnv},
+		fileSystemJetpack: fs,
+	} = context;
 	let cache = {};
 
 	/**
@@ -32,7 +36,19 @@ module.exports = function(context) {
 						cache[machineName] = stdout.trim();
 						resolve(cache[machineName]);
 				});
+	/**
+	 * Get the Docker container info.
+	 *
+	 * @param {Object} site The site to inspect.
+	 */
+	const inspectContainer = (site) => {
+
+		docker().getContainer(site.container).inspect((err, containerInfo) => {
+
+			console.log( 'container: %O', containerInfo);
+
 		});
+
 	};
 
 	/**
