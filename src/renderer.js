@@ -11,22 +11,23 @@ module.exports = function(context) {
 
 
 	const getIP = (machineName = 'local-by-flywheel') => {
-	    return new Promise(function(resolve, reject) {
-	        let cmd = `docker-machine ip ${machineName}`;
+		return new Promise(function(resolve, reject) {
+			let dmp = dockerMachinePath.replace(/\s/gm,`\\ `);
+				let cmd = `${dmp} ip local-by-flywheel`;
 
-	        exec(cmd, (err, stdout) => {
-	            if (err && cache[machineName]) {
-	                resolve(cache[machineName]);
-	            } else if (err) {
-	                console.error(err.message);
-	                reject(err);
-	                return;
-	            }
+				exec(cmd, (err, stdout) => {
+						if (err && cache[machineName]) {
+								resolve(cache[machineName]);
+						} else if (err) {
+								console.error(err.message);
+								reject(err);
+								return;
+						}
 
-	            cache[machineName] = stdout.trim();
-	            resolve(cache[machineName]);
-	        });
-	    });
+						cache[machineName] = stdout.trim();
+						resolve(cache[machineName]);
+				});
+		});
 	};
 
 	const configureWPCLI = (event, site) => {
