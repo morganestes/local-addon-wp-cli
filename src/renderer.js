@@ -70,6 +70,11 @@ define( 'WP_DEBUG', false );`;
 		publicCWD.file( 'site.json', {content: site} );
 		publicCWD.file('context.json', {content: context.environment});
 
+		let wpcliYML = `path: app/public
+url: http://${site.domain}
+require:
+  - wp-cli.local.php
+`;
 		publicCWD.write('wp-cli.local.yml', wpcliYML);
 
 		if('apache' === site.webServer) {
