@@ -3,13 +3,18 @@
 const path = require('path');
 const exec = require('child_process').exec;
 
-let cache = {};
 
 module.exports = function(context) {
 
 	const { hooks, notifier, React, environment: {userHome, dockerMachinePath, dockerEnv}, fileSystemJetpack:fs } = context;
+	let cache = {};
 
-
+	/**
+	 * Get the IP address of Flywheel's Docker instance.
+	 *
+	 * @param {String} machineName The Docker machine name. Default 'local-by-flywheel'.
+	 * @returns {Promise}
+	 */
 	const getIP = (machineName = 'local-by-flywheel') => {
 		return new Promise(function(resolve, reject) {
 			let dmp = dockerMachinePath.replace(/\s/gm,`\\ `);
@@ -30,6 +35,12 @@ module.exports = function(context) {
 		});
 	};
 
+	/**
+	 * Generate the files needed for the WP-CLI tunnel.
+	 *
+	 * @param {DOMEvent} event The event that triggered the function.
+	 * @param {Object} site Data for the current Flywheel site.
+	 */
 	const configureWPCLI = (event, site) => {
 
 		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
