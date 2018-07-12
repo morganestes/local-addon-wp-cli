@@ -68,6 +68,7 @@ define( 'WP_DEBUG', false );`;
 		// Debugging.
 		console.log('site: %O', site);
 		publicCWD.file( 'site.json', {content: site} );
+		publicCWD.file('context.json', {content: context.environment});
 
 		publicCWD.write('wp-cli.local.yml', wpcliYML);
 
