@@ -1,8 +1,7 @@
 'use strict';
 
 const path = require('path');
-const exec = require('child_process').exec;
-
+const exec = require('child_process').execSync;
 
 module.exports = function(context) {
 
@@ -17,38 +16,18 @@ module.exports = function(context) {
 	 * Get the IP address of Flywheel's Docker instance.
 	 *
 	 * @param {String} machineName The Docker machine name. Default 'local-by-flywheel'.
-	 * @returns {Promise}
+	 * @returns {String} The Docker machine IP.
 	 */
-	const getIP = (machineName = 'local-by-flywheel') => {
-		return new Promise(function(resolve, reject) {
-			let dmp = dockerMachinePath.replace(/\s/gm,`\\ `);
-				let cmd = `${dmp} ip local-by-flywheel`;
+	const getMachineIP = () => {
+		let dmp = dockerMachinePath.replace(/\s/gm,`\\ `);
+		let cmd = `${dmp} ip local-by-flywheel`;
 
-				exec(cmd, (err, stdout) => {
-						if (err && cache[machineName]) {
-								resolve(cache[machineName]);
-						} else if (err) {
-								console.error(err.message);
-								reject(err);
-								return;
-						}
-
-						cache[machineName] = stdout.trim();
-						resolve(cache[machineName]);
-				});
-	/**
-	 * Get the Docker container info.
-	 *
-	 * @param {Object} site The site to inspect.
-	 */
-	const inspectContainer = (site) => {
-
-		docker().getContainer(site.container).inspect((err, containerInfo) => {
-
-			console.log( 'container: %O', containerInfo);
-
+		let IP = exec(cmd, (err, stdout) => {
+			console.log(`stdout: ${stdout}`);
+			console.error(`err: ${err}`);
 		});
 
+		return IP.toString().trim();
 	};
 
 	/**
@@ -62,12 +41,10 @@ module.exports = function(context) {
 		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
 		let publicCWD = fs.cwd(path.join(sitePath, './'));
 
-		getIP().then(
-			(data) => {
-				IP = data.toString();
+		let ipAddress = getContainerIP();
 
-				let wpcliPHP = `<?php
-define('DB_HOST', '${IP}:${site.ports.MYSQL}');
+		let wpcliPHP = `<?php
+define('DB_HOST', '${ipAddress}:${site.ports.MYSQL}');
 define('DB_USER', '${site.mysql.user}');
 define('DB_PASSWORD', '${site.mysql.password}');
 
@@ -76,14 +53,10 @@ error_reporting(0);
 define( 'WP_DEBUG', false );`;
 
 		publicCWD.file('wp-cli.local.php', {content: wpcliPHP});
-			},
-			(err) => {
-				console.error(err);
-			});
 
 		// Debugging.
 		console.log('site: %O', site);
-		publicCWD.file( 'site.json', {content: site} );
+		publicCWD.file('site.json', {content: site});
 		publicCWD.file('context.json', {content: context.environment});
 
 		let wpcliYML = `path: app/public
@@ -91,7 +64,7 @@ url: http://${site.domain}
 require:
   - wp-cli.local.php
 `;
-		publicCWD.write('wp-cli.local.yml', wpcliYML);
+		publicCWD.file('wp-cli.local.yml', {content: wpcliYML});
 
 		if('apache' === site.webServer) {
 			let apache = `apache_modules:
