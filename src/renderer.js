@@ -7,11 +7,8 @@ let cache = {};
 
 module.exports = function(context) {
 
-	const hooks = context.hooks;
-	const userHome = context.environment.userHome;
-	const fs = context.fileSystemJetpack;
-	const notifier = context.notifier;
-	const React = context.React;
+	const { hooks, notifier, React, environment: {userHome, dockerMachinePath, dockerEnv}, fileSystemJetpack:fs } = context;
+
 
 	const getIP = (machineName = 'local-by-flywheel') => {
 	    return new Promise(function(resolve, reject) {
