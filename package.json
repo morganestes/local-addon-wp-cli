@@ -1,7 +1,7 @@
 {
 	"name": "local-addon-wp-cli-local",
 	"productName": "WP-CLI Local integration",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "One-click configuration for SSH-less WP-CLI.",
 	"renderer": "lib/renderer.js",
 	"scripts": {
