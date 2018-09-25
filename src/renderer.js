@@ -41,7 +41,7 @@ module.exports = function(context) {
 		let sitePath = site.path.replace('~/', userHome + '/').replace(/\/+$/,'') + '/';
 		let publicCWD = fs.cwd(path.join(sitePath, './'));
 
-		let ipAddress = getContainerIP();
+		let ipAddress = getMachineIP();
 
 		let wpcliPHP = `<?php
 define('DB_HOST', '${ipAddress}:${site.ports.MYSQL}');
