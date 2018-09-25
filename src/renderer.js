@@ -1,16 +1,14 @@
 'use strict';
 
 const path = require('path');
-const exec = require('child_process').execSync;
 
 module.exports = function(context) {
 
 	const { hooks, notifier, React,
 		docker: { docker },
-		environment: {userHome, dockerMachinePath, dockerEnv},
+		environment: {userHome, dockerEnv},
 		fileSystemJetpack: fs,
 	} = context;
-	let cache = {};
 
 	/**
 	 * Get the IP address of Flywheel's Docker instance.
@@ -19,15 +17,7 @@ module.exports = function(context) {
 	 * @returns {String} The Docker machine IP.
 	 */
 	const getMachineIP = () => {
-		let dmp = dockerMachinePath.replace(/\s/gm,`\\ `);
-		let cmd = `${dmp} ip local-by-flywheel`;
-
-		let IP = exec(cmd, (err, stdout) => {
-			console.log(`stdout: ${stdout}`);
-			console.error(`err: ${err}`);
-		});
-
-		return IP.toString().trim();
+		return dockerEnv.ip;
 	};
 
 	/**
@@ -56,6 +46,7 @@ define( 'WP_DEBUG', false );`;
 
 		// Debugging.
 		console.log('site: %O', site);
+
 		publicCWD.file('site.json', {content: site});
 		publicCWD.file('context.json', {content: context.environment});
 
